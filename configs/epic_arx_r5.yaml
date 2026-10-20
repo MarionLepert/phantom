@@ -1,0 +1,12 @@
+# EPIC-KITCHENS processing with two ARX R5 arms in a shoulder-mounted layout
+# (base poses: phantom/twin_bimanual_robot.py ARX_R5_BASE_POSES).
+# Usage: python process_data.py --config-name epic_arx_r5 demo_name=epic ...
+defaults:
+  - epic
+  - _self_
+
+robot: "ARXR5"
+gripper: "ARXR5"
+# Camera pose in the ARX_R5_BASE_POSES layout frame, fitted to EPIC hand trajectories for R5 reachability.
+# Replace with your own calibration when using a real setup.
+camera_extrinsics: "camera/camera_extrinsics_ego_bimanual_arx_r5.json"

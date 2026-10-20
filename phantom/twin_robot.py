@@ -333,6 +333,12 @@ class TwinRobot:
             open_gripper_action, closed_gripper_action = 0, 255  # 0=open, 255=closed
             # Linear interpolation between open and closed states
             return np.interp(gripper_pos, [min_gripper_pos, max_gripper_pos], [closed_gripper_action, open_gripper_action])
+        elif self.gripper_name == "ARXR5":
+            # ARX R5 parallel gripper: 0 to 8.8cm total opening, two fingers with 0-4.4cm travel each.
+            # Action is the per-finger travel in meters; robosuite applies [a, -a] to the two fingers.
+            min_gripper_pos, max_gripper_pos = 0.0, 0.088
+            gripper_pos = np.clip(gripper_pos, min_gripper_pos, max_gripper_pos)
+            return gripper_pos / 2.0
         else:
             raise ValueError(f"Gripper name {self.gripper_name} not supported")
 

@@ -58,6 +58,20 @@ BASE_T_1 = np.array([[0.0, -1.0,  0.0,  0.0],
                     [-0.866,  0.0,  0.5,  1.50],
                     [ 0.0,  0.0,  0.0,  1.0]])
 
+# Bimanual layout for ARX R5 arms: shoulder-mounted arms 0.24 m apart, each tilted ~60 deg outwards.
+# Base poses in the layout frame (x right, y forward, z up) as (xyz, URDF rpy). For ARXR5 this layout frame is
+# phantom's robot frame "1", so the camera extrinsics json must give the camera pose in this frame.
+ARX_R5_BASE_POSES = {
+    "right": ([0.12, 0.0, -0.04], [1.05, 0.0, np.pi / 2]),   # robot0
+    "left": ([-0.12, 0.0, -0.04], [-1.05, 0.0, np.pi / 2]),  # robot1
+}
+
+# Layout frame -> MuJoCo world: lift the arms above the empty arena floor
+ARX_R5_T_1 = np.array([[1.0, 0.0, 0.0, 0.0],
+                       [0.0, 1.0, 0.0, 0.0],
+                       [0.0, 0.0, 1.0, 1.5],
+                       [0.0, 0.0, 0.0, 1.0]])
+
 def convert_real_camera_ori_to_mujoco(camera_ori_matrix: np.ndarray) -> np.ndarray:
     """
     Convert camera orientation from real world to MuJoCo XML format.
@@ -173,10 +187,20 @@ class TwinBimanualRobot:
         options["camera_segmentations"] = "instance"  # Instance segmentation masks
         options["direct_gripper_control"] = True
         options["use_depth_obs"] = True
+
+        # ARX R5 arms use ARX_R5_BASE_POSES instead of the hardcoded Kinova shoulders layout
+        if self.robot_name == "ARXR5":
+            base_poses = []
+            for side in ("right", "left"):
+                pos, rpy = ARX_R5_BASE_POSES[side]
+                world_R = ARX_R5_T_1[:3, :3] @ Rotation.from_euler("xyz", rpy).as_matrix()
+                world_pos = ARX_R5_T_1[:3, :3] @ np.array(pos) + ARX_R5_T_1[:3, 3]
+                base_poses.append((world_pos, Rotation.from_matrix(world_R).as_quat(scalar_first=True)))
+            options["robot_base_poses"] = base_poses
         
         # Apply Epic Kitchen coordinate transformation if enabled
         if self.epic:
-            self.base_T_1 = BASE_T_1
+            self.base_T_1 = ARX_R5_T_1 if self.robot_name == "ARXR5" else BASE_T_1
             # Transform camera position and orientation to Epic Kitchen frame
             self.camera_params.pos = self.base_T_1[:3, :3] @ self.camera_params.pos + self.base_T_1[:3, 3]
             camera_ori_matrix = self.base_T_1[:3, :3] @ Rotation.from_quat(self.camera_params.ori_wxyz, scalar_first=True).as_matrix()
@@ -400,6 +424,12 @@ class TwinBimanualRobot:
             open_gripper_action, closed_gripper_action = 0, 255  # 0=open, 255=closed
             # Linear interpolation between open and closed states
             return np.interp(gripper_pos, [min_gripper_pos, max_gripper_pos], [closed_gripper_action, open_gripper_action])
+        elif self.gripper_name == "ARXR5":
+            # ARX R5 parallel gripper: 0 to 8.8cm total opening, two fingers with 0-4.4cm travel each.
+            # Action is the per-finger travel in meters; robosuite applies [a, -a] to the two fingers.
+            min_gripper_pos, max_gripper_pos = 0.0, 0.088
+            gripper_pos = np.clip(gripper_pos, min_gripper_pos, max_gripper_pos)
+            return gripper_pos / 2.0
         else:
             raise ValueError(f"Gripper name {self.gripper_name} not supported")
 

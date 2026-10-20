@@ -1,0 +1,38 @@
+[
+    {
+        "note": "Camera pose in the ARX_R5_BASE_POSES layout frame (x right, y forward, z up; OpenCV camera axes): 0.30 m behind and 0.45 m above the shoulder line, pitched 30 deg down, yawed 10 deg. Fitted to EPIC-KITCHENS hand trajectories so that the targets are reachable by the R5 arms. Replace camera_base_pos / camera_base_ori with your own calibration when using a real setup.",
+        "camera_base_ori": [
+            [
+                0.9848077630096178,
+                0.08682398458434759,
+                -0.15038372789929466
+            ],
+            [
+                0.17364812096876708,
+                -0.49240391257351923,
+                0.85286852267293
+            ],
+            [
+                -9.253997441949213e-08,
+                -0.8660253937288367,
+                -0.5000000174168041
+            ]
+        ],
+        "camera_base_ori_rotvec": [
+            -2.088157844114983,
+            -0.1826900222321184,
+            0.10547625988994291
+        ],
+        "camera_base_pos": [
+            0.0,
+            -0.3,
+            0.45
+        ],
+        "camera_base_quat": [
+            -0.498097338132642,
+            0.8627299248606051,
+            0.07547903986151872,
+            -0.0435778961949092
+        ]
+    }
+]

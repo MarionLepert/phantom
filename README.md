@@ -104,8 +104,8 @@ Each video is processed using the following steps:
 |------|------|----------|---------|-------------|
 | `--demo_name` | `str` | ✅ | - | Name of the demonstration/dataset to process |
 | `--mode` | `str` (multiple) | ✅ | `bbox`, `hand2d`, `hand3d`, `hand_segmentation`, `arm_segmentation`, `action`, `smoothing`, `hand_inpaint`, `robot_inpaint`, `all` | Processing modes to run (can specify multiple with e.g. `'mode=[bbox,hand2d]'`) |
-| `--robot_name` | `str` | ✅ | `Panda`, `Kinova3`, `UR5e`, `IIWA`, `Jaco` | Type of robot to use for overlays |
-| `--gripper_name` | `str` | ❌ | `Robotiq85` | Type of gripper to use |
+| `--robot_name` | `str` | ✅ | `Panda`, `Kinova3`, `UR5e`, `IIWA`, `Jaco`, `ARXR5` | Type of robot to use for overlays |
+| `--gripper_name` | `str` | ❌ | `Robotiq85`, `ARXR5` | Type of gripper to use |
 | `--data_root_dir` | `str` | ❌ | - | Root directory containing raw video data |
 | `--processed_data_root_dir` | `str` | ❌ | - | Root directory to save processed data |
 | `--epic` | `bool` | ❌ | - | Use Epic-Kitchens dataset processing mode |
@@ -122,6 +122,18 @@ Each video is processed using the following steps:
 | `--render` | `bool` | ❌ | - | Render the robot overlay on the video |
 
 **Note** Please specify `--bimanual_setup single_arm` along with `--target_hand left` or `--target_hand right` if you are using single arm. For bimanual setups, use `--bimanual_setup shoulders`.
+
+### ARX R5 (bimanual)
+Two ARX R5 arms can be overlaid on Epic-Kitchens videos. The R5 meshes come from ARX's official CAD export ([ARXroboticsX/ARX_Model](https://github.com/ARXroboticsX/ARX_Model)) and are not redistributed here; download them once:
+```bash
+python submodules/phantom-robosuite/robosuite/scripts/download_arx_r5_meshes.py
+```
+Then use the `epic_arx_r5` config (sets `robot=ARXR5`, `gripper=ARXR5` and the matching camera extrinsics):
+```bash
+cd phantom
+python process_data.py --config-name epic_arx_r5 demo_name=epic data_root_dir=../data/raw processed_data_root_dir=../data/processed mode=all
+```
+The arms are shoulder-mounted as defined in `ARX_R5_BASE_POSES` (`phantom/twin_bimanual_robot.py`). The camera pose in `phantom/camera/camera_extrinsics_ego_bimanual_arx_r5.json` is fitted to Epic-Kitchens hand trajectories for R5 reachability; replace it with your own calibration for a real setup. Joint and torque limits follow the `L5` config of [arx5-sdk](https://github.com/real-stanford/arx5-sdk).
 
 ### Camera details
 * **Phantom**: a Zed2 camera was used to capture the sample data at HD1080 resolution. 
